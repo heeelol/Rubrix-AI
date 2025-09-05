@@ -1,9 +1,9 @@
 import React from 'react';
-import { ChevronRight, BarChart3, Clock, BookOpen } from 'lucide-react';
+import { ChevronRight, BarChart3, Clock, BookOpen, Brain} from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-teal-500 to-slate-900">
       {/* Hero Section */}
       <header id="home" className="relative overflow-hidden">
         {/* Animated background elements */}
@@ -19,13 +19,14 @@ export default function Home() {
               <span className="text-blue-300 text-sm font-medium">🚀 Next-Gen Learning Technology</span>
             </div>
             
-            <h1 className="text-6xl md:text-7xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent mb-8 leading-tight">
-              Empowering
-              <span className="block bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Personalized Learning
+            <h1 className="text-6xl md:text-7xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text font-black text-transparent mb-8 leading-tight">
+              <Brain className="absolute" size={100} color="#3B82F6" />
+              EduAgent AI
+              <span className="block bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent text-sm">
+              Personalized Learning Assistant
               </span>
             </h1>
-            
+
             <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
               Transform your educational journey with AI-powered adaptive learning that evolves with you, delivering personalized experiences at scale.
             </p>
