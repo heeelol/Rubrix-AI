@@ -18,131 +18,130 @@ const MainDashboard = () => {
   });
 
   const [subjects, setSubjects] = useState({
-    'Mathematics': { 
-      score: 65, 
-      trend: 'improving', 
-      weakness: 'Quadratic Equations',
-      strengths: ['Basic Algebra', 'Geometry'],
-      recentActivity: 'Completed 3 assignments',
-      nextFocus: 'Polynomial Functions'
-    },
-    'Physics': { 
-      score: 45, 
-      trend: 'needs-attention', 
-      weakness: 'Newton\'s Laws',
-      strengths: ['Kinematics'],
-      recentActivity: 'Struggling with mechanics',
-      nextFocus: 'Force and Motion'
-    },
-    'Chemistry': { 
-      score: 80, 
-      trend: 'excellent', 
-      weakness: 'Organic Reactions',
-      strengths: ['Periodic Table', 'Chemical Bonding'],
-      recentActivity: 'Aced recent test',
-      nextFocus: 'Thermodynamics'
-    },
-    'Biology': { 
-      score: 70, 
-      trend: 'stable', 
-      weakness: 'Photosynthesis',
-      strengths: ['Cell Structure', 'DNA'],
-      recentActivity: 'Good progress',
-      nextFocus: 'Ecology'
-    },
     'English': { 
       score: 85, 
       trend: 'excellent', 
       weakness: 'Poetry Analysis',
-      strengths: ['Essay Writing', 'Grammar'],
+      strengths: ['Essay Writing', 'Grammar', 'Vocabulary'],
       recentActivity: 'Excellent essays',
-      nextFocus: 'Literature Analysis'
-    },
-    'History': { 
-      score: 60, 
-      trend: 'improving', 
-      weakness: 'World War II',
-      strengths: ['Ancient History'],
-      recentActivity: 'Making progress',
-      nextFocus: 'Cold War Era'
+      nextFocus: 'Literature Analysis',
+      topics: [
+        'Poetry Analysis',
+        'Literature Comprehension',
+        'Essay Writing',
+        'Grammar and Vocabulary',
+        'Creative Writing'
+      ],
+      resources: [
+        'Literature Textbook',
+        'Grammar Handbook',
+        'Writing Style Guide'
+      ]
     }
   });
 
   const [homeworkQueue, setHomeworkQueue] = useState([
     { 
       id: 1, 
-      subject: 'Physics', 
-      topic: 'Newton\'s Laws', 
+      subject: 'English', 
+      topic: 'Grammar: Subject-Verb Agreement', 
       difficulty: 'Medium', 
-      questions: 8, 
-      estimatedTime: '45 min',
+      questions: 10, 
+      estimatedTime: '15 min',
       dueDate: 'Today',
       priority: 'high',
-      description: 'Focus on understanding force interactions and applications'
+      description: 'Quick practice focusing on subject-verb agreement in complex sentences'
     },
     { 
       id: 2, 
-      subject: 'Mathematics', 
-      topic: 'Quadratic Equations', 
-      difficulty: 'Hard', 
-      questions: 6, 
-      estimatedTime: '30 min',
+      subject: 'English', 
+      topic: 'Punctuation: Comma Usage', 
+      difficulty: 'Medium', 
+      questions: 8, 
+      estimatedTime: '10 min',
       dueDate: 'Tomorrow',
       priority: 'medium',
-      description: 'Practice solving complex quadratic problems'
+      description: 'Short exercises on proper comma placement in various sentence types'
     },
     { 
       id: 3, 
-      subject: 'History', 
-      topic: 'World War II', 
-      difficulty: 'Medium', 
-      questions: 5, 
-      estimatedTime: '25 min',
+      subject: 'English', 
+      topic: 'Vocabulary in Context', 
+      difficulty: 'Easy', 
+      questions: 12, 
+      estimatedTime: '15 min',
       dueDate: 'In 2 days',
       priority: 'low',
-      description: 'Analyze key events and their impacts'
+      description: 'Practice using vocabulary words in different contexts with multiple-choice questions'
     }
   ]);
 
   const [recentActivity, setRecentActivity] = useState([
-    { time: '2 hours ago', action: 'Completed Chemistry homework', result: '92% score', type: 'success' },
-    { time: '5 hours ago', action: 'AI generated Physics practice set', result: '8 personalized questions', type: 'info' },
-    { time: '1 day ago', action: 'Uploaded Math test paper', result: 'Weaknesses identified', type: 'analysis' },
-    { time: '2 days ago', action: 'Biology homework completed', result: '78% score', type: 'success' }
+    { time: '2 hours ago', action: 'Completed Literature Analysis', result: '92% score', type: 'success' },
+    { time: '5 hours ago', action: 'Generated Poetry Practice Set', result: '5 poem analyses', type: 'info' },
+    { time: '1 day ago', action: 'Uploaded Essay Draft', result: 'Writing style analyzed', type: 'analysis' },
+    { time: '2 days ago', action: 'Grammar Quiz completed', result: '85% score', type: 'success' }
   ]);
 
   const [agentInsights, setAgentInsights] = useState([
     {
       type: 'recommendation',
-      title: 'Focus on Physics',
-      message: 'Your Physics score has dropped 5 points. I recommend dedicating 30 extra minutes daily.',
+      title: 'Grammar Focus Needed',
+      message: 'Your subject-verb agreement in complex sentences needs attention. I\'ve generated targeted exercises to help.',
       priority: 'high'
     },
     {
-      type: 'achievement',
-      title: 'Chemistry Mastery!',
-      message: 'Excellent progress in Chemistry! You\'ve improved 15 points this month.',
+      type: 'progress',
+      title: 'Spelling Improvement',
+      message: 'Your spelling accuracy has improved by 8% this week. Keep up the consistent practice!',
       priority: 'positive'
     },
     {
       type: 'tip',
-      title: 'Study Tip',
-      message: 'Try the Feynman technique for Physics concepts - explain them in simple terms.',
+      title: 'Quick Practice Tip',
+      message: 'Try these 5-minute comma exercises between other activities to maintain momentum.',
       priority: 'medium'
+    },
+    {
+      type: 'adaptive',
+      title: 'Personalized Plan',
+      message: 'Based on your progress, I\'ve adjusted the exercise difficulty for better learning pace.',
+      priority: 'info'
     }
   ]);
 
-  // Prepare chart data
-  const radarData = Object.entries(subjects).map(([subject, data]) => ({
-    subject: subject.length > 8 ? subject.substring(0, 8) + '...' : subject,
-    fullSubject: subject,
-    score: data.score
-  }));
+  // Prepare chart data for English topics and subtopics
+  const radarData = [
+    { subject: 'Grammar', score: 82, subtopics: {
+      'Sentence Structure': 80,
+      'Verb Tense': 85,
+      'Subject-Verb Agreement': 81
+    }},
+    { subject: 'Vocabulary', score: 78, subtopics: {
+      'Word Choice': 75,
+      'Synonyms/Antonyms': 80,
+      'Context Usage': 79
+    }},
+    { subject: 'Writing', score: 85, subtopics: {
+      'Coherence': 86,
+      'Clarity': 84,
+      'Logical Flow': 85,
+      'Creativity': 85
+    }},
+    { subject: 'Spelling', score: 88, subtopics: {
+      'Word Accuracy': 88
+    }},
+    { subject: 'Punctuation', score: 76, subtopics: {
+      'Commas': 75,
+      'Quotation Marks': 78,
+      'Full Stops': 75
+    }}
+  ];
 
   const progressData = [
-    { week: 'W1', Mathematics: 60, Physics: 50, Chemistry: 75, Biology: 65, English: 80, History: 55 },
-    { week: 'W2', Mathematics: 62, Physics: 48, Chemistry: 78, Biology: 68, English: 82, History: 58 },
-    { week: 'W3', Mathematics: 65, Physics: 45, Chemistry: 80, Biology: 70, English: 85, History: 60 }
+    { week: 'W1', Grammar: 75, Writing: 70, Reading: 80, Speaking: 78, Literature: 72 },
+    { week: 'W2', Grammar: 78, Writing: 75, Reading: 82, Speaking: 80, Literature: 76 },
+    { week: 'W3', Grammar: 82, Writing: 80, Reading: 85, Speaking: 83, Literature: 80 }
   ];
 
   const handleFileUpload = (event) => {
@@ -214,12 +213,23 @@ const MainDashboard = () => {
               <button className="text-sm px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-lg">All Time</button>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={400}>
             <RadarChart data={radarData}>
-              <PolarGrid />
-              <PolarAngleAxis dataKey="subject" className="text-sm" />
-              <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
-              <Radar name="Current Score" dataKey="score" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} strokeWidth={2} />
+              <PolarGrid gridType="circle" />
+              <PolarAngleAxis 
+                dataKey="subject" 
+                tick={{ fill: '#4B5563', fontSize: 14 }}
+                axisLine={{ stroke: '#E5E7EB' }}
+              />
+              <Tooltip />
+              <Radar 
+                name="Proficiency" 
+                dataKey="score" 
+                stroke="#3B82F6" 
+                fill="#3B82F6" 
+                fillOpacity={0.4} 
+                strokeWidth={2} 
+              />
             </RadarChart>
           </ResponsiveContainer>
         </div>
@@ -308,65 +318,7 @@ const MainDashboard = () => {
     </div>
   );
 
-  const SubjectsTab = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {Object.entries(subjects).map(([subject, data]) => (
-        <div key={subject} className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="text-lg font-semibold">{subject}</h3>
-            <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-              data.trend === 'excellent' ? 'bg-green-100 text-green-800' :
-              data.trend === 'improving' ? 'bg-blue-100 text-blue-800' :
-              data.trend === 'stable' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
-            }`}>
-              {data.trend === 'needs-attention' ? 'Needs Attention' : data.trend}
-            </span>
-          </div>
-          
-          <div className="mb-4">
-            <div className="flex justify-between text-sm mb-2">
-              <span>Current Score</span>
-              <span className="font-semibold">{data.score}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className={`h-3 rounded-full transition-all duration-500 ${
-                  data.score >= 80 ? 'bg-green-500' :
-                  data.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
-                style={{ width: `${data.score}%` }}
-              ></div>
-            </div>
-          </div>
-          
-          <div className="space-y-3 text-sm">
-            <div>
-              <span className="text-red-600 font-medium">Focus Area: </span>
-              <span>{data.weakness}</span>
-            </div>
-            <div>
-              <span className="text-green-600 font-medium">Strengths: </span>
-              <span>{data.strengths.join(', ')}</span>
-            </div>
-            <div>
-              <span className="text-blue-600 font-medium">Next Topic: </span>
-              <span>{data.nextFocus}</span>
-            </div>
-            <div className="pt-2 border-t">
-              <span className="text-gray-500">{data.recentActivity}</span>
-            </div>
-          </div>
-          
-          <button 
-            className="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium transition-colors"
-          >
-            Generate Practice Set
-          </button>
-        </div>
-      ))}
-    </div>
-  );
+  // Removed SubjectsTab component as we're focusing only on English topics
 
   const HomeworkTab = () => (
     <div className="space-y-6">
@@ -571,7 +523,6 @@ const MainDashboard = () => {
           <nav className="flex space-x-8">
             {[
               { id: 'overview', label: 'Overview', icon: BarChart3 },
-              { id: 'subjects', label: 'Subjects', icon: BookOpen },
               { id: 'homework', label: 'Homework', icon: Target },
               { id: 'upload', label: 'Upload & Analyze', icon: Upload }
             ].map((tab) => {
@@ -598,7 +549,6 @@ const MainDashboard = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {currentView === 'overview' && <OverviewTab />}
-        {currentView === 'subjects' && <SubjectsTab />}
         {currentView === 'homework' && <HomeworkTab />}
         {currentView === 'upload' && <UploadTab />}
       </div>

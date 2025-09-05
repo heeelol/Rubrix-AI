@@ -1,9 +1,14 @@
 import React from 'react';
 import { ChevronRight, BarChart3, Clock, BookOpen, Brain} from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+
 
 export default function Home() {
+
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-teal-500 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Hero Section */}
       <header id="home" className="relative overflow-hidden">
         {/* Animated background elements */}
@@ -32,7 +37,8 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25">
+              <button className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25"
+                onClick={() => navigate('/register')} >
                 <span className="relative z-10 flex items-center">
                   Get Started
                   <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
@@ -133,27 +139,6 @@ export default function Home() {
                 Through sophisticated real-time analysis and dynamic content adjustments, our platform doesn't just adapt to your learning style—it anticipates your needs, identifies knowledge gaps before they become obstacles, and empowers you to unlock your full learning potential with unprecedented precision and effectiveness.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="relative py-24">
-        <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-blue-500/20 rounded-3xl p-12 text-center max-w-4xl mx-auto">
-            <h3 className="text-4xl font-bold text-white mb-6">
-              Ready to Transform Your Learning?
-            </h3>
-            <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-              Join thousands of learners who have already discovered the power of AI-driven personalized education.
-            </p>
-            <button className="group relative px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold text-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25">
-              <span className="relative z-10 flex items-center">
-                Start Your Journey
-                <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </button>
           </div>
         </div>
       </section>
