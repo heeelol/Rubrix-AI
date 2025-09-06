@@ -144,32 +144,51 @@ const MainDashboard = () => {
     { week: 'W3', Grammar: 82, Writing: 80, Reading: 85, Speaking: 83, Literature: 80 }
   ];
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setIsAnalyzing(true);
-      
-      setTimeout(() => {
-        setIsAnalyzing(false);
-        setRecentActivity(prev => [{
-          time: 'Just now',
-          action: `Analyzed ${file.name}`,
-          result: 'New learning patterns identified',
-          type: 'analysis'
-        }, ...prev]);
-        
-        setNotifications(prev => prev + 1);
-        
-        // Simulate updating insights
-        setAgentInsights(prev => [{
-          type: 'analysis',
-          title: 'New Document Analyzed',
-          message: `Based on your uploaded ${file.name}, I've identified areas for improvement.`,
-          priority: 'medium'
-        }, ...prev.slice(0, 2)]);
-      }, 3000);
-    }
-  };
+  const handleFileUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  setIsAnalyzing(true);
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = await fetch("http://localhost:3000/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    setIsAnalyzing(false);
+
+    // Update dashboard with results
+    setRecentActivity((prev) => [
+      {
+        time: "Just now",
+        action: `Analyzed ${file.name}`,
+        result: "Weaknesses identified",
+        type: "analysis",
+      },
+      ...prev,
+    ]);
+
+    setAgentInsights((prev) => [
+      {
+        type: "analysis",
+        title: "New Document Analyzed",
+        message: `Weaknesses found: ${result.weaknesses.join(", ")}`,
+        priority: "medium",
+      },
+      ...prev,
+    ]);
+  } catch (error) {
+    console.error("Upload failed:", error);
+    setIsAnalyzing(false);
+  }
+};
+
 
   const startHomework = (homework) => {
     setRecentActivity(prev => [{

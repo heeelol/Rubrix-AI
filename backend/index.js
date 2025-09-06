@@ -2,6 +2,8 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const multer = require('multer');
+const { spawn } = require('child_process');
 const app = express();
 const { createServer } = require('node:http');
 const { Pool } = require('pg');
@@ -162,6 +164,49 @@ app.post('/api/login', async (req, res) => {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+const upload = multer({ dest: "uploads/" });
+
+// Upload + OCR route
+app.post("/upload", upload.single("file"), (req, res) => {
+    const filePath = req.file.path;
+
+    // Call Python script (converted Jupyter notebook to ocr.py)
+    const path = require("path");
+    const python = spawn("python", [path.join(__dirname, "ocr.py"), filePath]);
+
+
+    let data = "";
+    python.stdout.on("data", (chunk) => {
+        data += chunk.toString();
+    });
+
+    python.stderr.on("data", (err) => {
+        console.error("Python error:", err.toString());
+    });
+
+    python.on("close", async () => {
+        try {
+            const result = JSON.parse(data); // JSON output from Python
+
+           // Ensure weaknesses is always an array
+            const weaknesses = Array.isArray(result.weaknesses)
+                ? result.weaknesses
+                : [];
+
+            // Save into PostgreSQL
+            await pool.query(
+                `INSERT INTO results (filename, text, weaknesses) VALUES ($1, $2, $3)`,
+                [req.file.originalname, result.text, weaknesses] // <-- pass array directly
+            );
+
+            res.json(result);
+        } catch (e) {
+            console.error("Parsing/DB error:", e);
+            res.status(500).json({ error: "Failed to process OCR output" });
+        }
+    });
 });
 
 // Example route (updated)
