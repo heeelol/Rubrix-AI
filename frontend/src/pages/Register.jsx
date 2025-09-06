@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Brain, Mail, Lock, User, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -10,11 +10,55 @@ const Register = () => {
     confirmPassword: ''
   });
 
-  const handleSubmit = (e) => {
+const navigate = useNavigate();
+
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState('');
+
+const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle registration logic here
-    console.log('Registration attempt:', formData);
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:3000/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert('Registration successful! Welcome ' + data.user.name);
+        
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: ''
+        });
+        
+        console.log('Registration successful:', data);
+        navigate('/login');
+        
+        // You can store the token and redirect here
+        // localStorage.setItem('token', data.token);
+        // window.location.href = '/dashboard';
+      } else {
+        setError(data.error || 'Registration failed');
+      }
+    } catch (err) {
+      setError('Network error. Please check if the server is running.');
+      console.error('Registration error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   const handleChange = (e) => {
     setFormData(prev => ({

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Brain, Mail, Lock, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -8,11 +9,43 @@ const Login = () => {
     password: ''
   });
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+ const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login attempt:', formData);
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        navigate('/dashboard');
+        console.log('Login successful:', data);
+        
+      } else {
+        setError(data.error || 'Login failed');
+        alert('Login failed! Please check your credentials.');
+      }
+    } catch (err) {
+      setError('Network error. Please check if the server is running.');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   const handleChange = (e) => {
     setFormData(prev => ({
