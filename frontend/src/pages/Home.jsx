@@ -25,9 +25,9 @@ export default function Home() {
             </div>
             
             <h1 className="text-6xl md:text-7xl font-bold bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text font-black text-transparent mb-8 leading-tight">
-              <Brain className="absolute" size={100} color="#3B82F6" />
+              <Brain className="relative -bottom-20" size={100} color="#3B82F6" />
               EduAgent AI
-              <span className="block bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent text-sm">
+              <span className="block bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent text-sm pt-5">
               Personalized Learning Assistant
               </span>
             </h1>
@@ -128,7 +128,7 @@ export default function Home() {
       <section id="description" className="relative py-24">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-5xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-8">
+            <h2 className="text-5xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-8 pb-4">
               About Agentic AI
             </h2>
             <div className="bg-gradient-to-br from-slate-800/30 to-slate-900/30 backdrop-blur-sm border border-slate-700/30 rounded-3xl p-12">

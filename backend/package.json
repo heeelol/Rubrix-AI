@@ -11,6 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "express": "^5.1.0"
+    "aws-sdk": "^2.1692.0",
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
   }
 }
