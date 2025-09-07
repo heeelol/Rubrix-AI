@@ -1,7 +1,9 @@
-    import fitz  # PyMuPDF
-    import os
-    import pytesseract
-    from PIL import Image
+# ----------------------------
+# 1️⃣ PDF Extraction
+# ----------------------------
+import pdfplumber
+import os
+import fitz
 
 def convert_pdf_to_string(pdf_path):
     """
@@ -46,14 +48,19 @@ def convert_pdf_to_string(pdf_path):
         print(f"An error occurred while processing the PDF with Tesseract: {e}")
         return None
 
-if __name__ == "__main__":
-    # ⚠️ Replace this with the actual path to your PDF file.
-    PDF_FILE_PATH = "C:/Users/CLL/Downloads/model_essays_and_composition_f_1678279780_2684b57e_progressive.pdf"
-    
-    extracted_string = convert_pdf_to_string(PDF_FILE_PATH)
-    extracted_string = extracted_string.replace('|', 'I')
-    
-    if extracted_string:
-        print("\n--- Final Extracted Text ---")
-        print(extracted_string)
-        print("----------------------------") 
+
+# ----------------------------
+# 3️⃣ Image / OCR Extraction
+# ----------------------------
+from PIL import Image
+import pytesseract
+
+def convert_png_to_string(file_path):
+    """
+    Extracts text from an image file using Tesseract OCR.
+    Returns the recognized text as a string.
+    """
+    image = Image.open(file_path)
+    text = pytesseract.image_to_string(image)
+    return text.strip()
+
