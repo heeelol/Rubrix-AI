@@ -1,11 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, FileText, BarChart3, Brain, Target, BookOpen, CheckCircle, AlertTriangle, TrendingUp, User, Settings, LogOut, Bell, Search, Download, Eye } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area } from 'recharts';
+import HomeworkPanel from '../components/HomeworkPanel';
+import { toast } from 'react-hot-toast';
 
 const MainDashboard = () => {
   const [currentView, setCurrentView] = useState('overview');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [notifications, setNotifications] = useState(3);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [generatedExercises, setGeneratedExercises] = useState(null);
+  
+  const [radarData, setRadarData] = useState([
+    { subject: 'Grammar', score: 0 },
+    { subject: 'Vocabulary', score: 0 },
+    { subject: 'Writing', score: 0 },
+    { subject: 'Spelling', score: 0 },
+    { subject: 'Punctuation', score: 0 }
+  ]);
+
+  // Fetch user scores when component mounts
+  useEffect(() => {
+    const fetchUserScores = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/user/scores');
+
+        if (response.ok) {
+          const scores = await response.json();
+          setRadarData(scores);
+        } else {
+          const error = await response.json();
+          console.error('Failed to fetch scores:', error);
+        }
+      } catch (error) {
+        console.error('Error fetching user scores:', error);
+      }
+    };
+
+    fetchUserScores();
+  }, []);
   
   const [studentProfile, setStudentProfile] = useState({
     name: 'Alex Johnson',
@@ -40,41 +73,7 @@ const MainDashboard = () => {
     }
   });
 
-  const [homeworkQueue, setHomeworkQueue] = useState([
-    { 
-      id: 1, 
-      subject: 'English', 
-      topic: 'Grammar: Subject-Verb Agreement', 
-      difficulty: 'Medium', 
-      questions: 10, 
-      estimatedTime: '15 min',
-      dueDate: 'Today',
-      priority: 'high',
-      description: 'Quick practice focusing on subject-verb agreement in complex sentences'
-    },
-    { 
-      id: 2, 
-      subject: 'English', 
-      topic: 'Punctuation: Comma Usage', 
-      difficulty: 'Medium', 
-      questions: 8, 
-      estimatedTime: '10 min',
-      dueDate: 'Tomorrow',
-      priority: 'medium',
-      description: 'Short exercises on proper comma placement in various sentence types'
-    },
-    { 
-      id: 3, 
-      subject: 'English', 
-      topic: 'Vocabulary in Context', 
-      difficulty: 'Easy', 
-      questions: 12, 
-      estimatedTime: '15 min',
-      dueDate: 'In 2 days',
-      priority: 'low',
-      description: 'Practice using vocabulary words in different contexts with multiple-choice questions'
-    }
-  ]);
+  const [homeworkQueue, setHomeworkQueue] = useState([]);
 
   const [recentActivity, setRecentActivity] = useState([
     { time: '2 hours ago', action: 'Completed Literature Analysis', result: '92% score', type: 'success' },
@@ -110,33 +109,35 @@ const MainDashboard = () => {
     }
   ]);
 
-  // Prepare chart data for English topics and subtopics
-  const radarData = [
-    { subject: 'Grammar', score: 82, subtopics: {
-      'Sentence Structure': 80,
-      'Verb Tense': 85,
-      'Subject-Verb Agreement': 81
-    }},
-    { subject: 'Vocabulary', score: 78, subtopics: {
-      'Word Choice': 75,
-      'Synonyms/Antonyms': 80,
-      'Context Usage': 79
-    }},
-    { subject: 'Writing', score: 85, subtopics: {
-      'Coherence': 86,
-      'Clarity': 84,
-      'Logical Flow': 85,
-      'Creativity': 85
-    }},
-    { subject: 'Spelling', score: 88, subtopics: {
-      'Word Accuracy': 88
-    }},
-    { subject: 'Punctuation', score: 76, subtopics: {
-      'Commas': 75,
-      'Quotation Marks': 78,
-      'Full Stops': 75
-    }}
-  ];
+  // Initialize detailed subtopics for radar data
+  useEffect(() => {
+    setRadarData([
+      { subject: 'Grammar', score: 82, subtopics: {
+        'Sentence Structure': 80,
+        'Verb Tense': 85,
+        'Subject-Verb Agreement': 81
+      }},
+      { subject: 'Vocabulary', score: 78, subtopics: {
+        'Word Choice': 75,
+        'Synonyms/Antonyms': 80,
+        'Context Usage': 79
+      }},
+      { subject: 'Writing', score: 85, subtopics: {
+        'Coherence': 86,
+        'Clarity': 84,
+        'Logical Flow': 85,
+        'Creativity': 85
+      }},
+      { subject: 'Spelling', score: 88, subtopics: {
+        'Word Accuracy': 88
+      }},
+      { subject: 'Punctuation', score: 76, subtopics: {
+        'Commas': 75,
+        'Quotation Marks': 78,
+        'Full Stops': 75
+      }}
+    ]);
+  }, []);
 
   const progressData = [
     { week: 'W1', Grammar: 75, Writing: 70, Reading: 80, Speaking: 78, Literature: 72 },
@@ -145,50 +146,126 @@ const MainDashboard = () => {
   ];
 
   const handleFileUpload = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
-  setIsAnalyzing(true);
+    setIsAnalyzing(true);
+    const formData = new FormData();
+    formData.append('file', file);
 
-  const formData = new FormData();
-  formData.append("file", file);
+    try {
+      const response = await fetch('http://localhost:3000/upload', {
+        method: 'POST',
+        body: formData
+      });
 
-  try {
-    const response = await fetch("http://localhost:3000/upload", {
-      method: "POST",
-      body: formData,
-    });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
 
-    const result = await response.json();
+      const data = await response.json();
+      console.log('Received data:', data);
+      setAnalysisResult(data);
+      
+      // Update radar chart data with the scores
+      if (data.analysis && data.analysis.scores) {
+        console.log('Processing scores:', data.analysis.scores);
+        // Convert scores from 1-5 scale to 0-100 scale
+        const normalizeScore = (score) => {
+          if (typeof score === 'number') {
+            // Convert 1-5 scale to 0-100 scale
+            return Math.round((score / 5) * 100);
+          }
+          return 0;
+        };
 
-    setIsAnalyzing(false);
+        const scores = [
+          { subject: 'Grammar', score: normalizeScore(data.analysis.scores.Grammar) },
+          { subject: 'Vocabulary', score: normalizeScore(data.analysis.scores.Vocabulary) },
+          { subject: 'Writing', score: normalizeScore(data.analysis.scores.Writing) },
+          { subject: 'Spelling', score: normalizeScore(data.analysis.scores.Spelling) },
+          { subject: 'Punctuation', score: normalizeScore(data.analysis.scores.Punctuation) }
+        ];
+        console.log('Normalized scores for radar chart:', scores);
+        setRadarData(scores);
+      }
 
-    // Update dashboard with results
-    setRecentActivity((prev) => [
-      {
-        time: "Just now",
+      // Add new homework exercises to the queue
+      if (data.homework) {
+        console.log('Processing homework:', data.homework);
+        let exercises = [];
+        try {
+          // Try parsing if it's a string
+          const homeworkData = typeof data.homework === 'string' ? JSON.parse(data.homework) : data.homework;
+          exercises = homeworkData.exercises || [];
+        } catch (e) {
+          console.error('Error parsing homework data:', e);
+          exercises = Array.isArray(data.homework) ? data.homework : [];
+        }
+
+        console.log('Processed exercises:', exercises);
+        const newHomeworkItems = exercises.map((exercise, index) => ({
+          id: Date.now() + index,
+          subject: 'English',
+          topic: exercise.type || 'Practice Exercise',
+          difficulty: exercise.difficulty || 'Medium',
+          questions: 1,
+          estimatedTime: '5-10 min',
+          dueDate: 'Today',
+          priority: index === 0 ? 'high' : 'medium',
+          description: exercise.question || exercise.content || exercise.description || 'Practice this exercise',
+          explanation: exercise.explanation || 'Complete the exercise to improve your skills',
+          answer: exercise.answer || ''
+        }));
+
+        setHomeworkQueue(prevQueue => [...newHomeworkItems, ...prevQueue]);
+        
+        // Update student profile
+        setStudentProfile(prev => ({
+          ...prev,
+          totalHomework: prev.totalHomework + newHomeworkItems.length
+        }));
+
+        // Add new insights based on analysis
+        if (data.analysis.feedback) {
+          const newInsights = data.analysis.feedback.map(feedback => ({
+            type: 'analysis',
+            title: 'Analysis Insight',
+            message: feedback,
+            priority: 'high'
+          }));
+          setAgentInsights(prev => [...newInsights, ...prev]);
+        }
+
+        // Notify user
+        toast.success(`${newHomeworkItems.length} new exercises added to your homework queue!`);
+      }
+
+      // Add to recent activity
+      setRecentActivity(prev => [{
+        time: 'Just now',
         action: `Analyzed ${file.name}`,
-        result: "Weaknesses identified",
-        type: "analysis",
-      },
-      ...prev,
-    ]);
+        result: 'Generated homework',
+        type: 'analysis'
+      }, ...prev]);
 
-    setAgentInsights((prev) => [
-      {
-        type: "analysis",
-        title: "New Document Analyzed",
-        message: `Weaknesses found: ${result.weaknesses.join(", ")}`,
-        priority: "medium",
-      },
-      ...prev,
-    ]);
-  } catch (error) {
-    console.error("Upload failed:", error);
-    setIsAnalyzing(false);
-  }
-};
+      setNotifications(prev => prev + 1);
 
+    } catch (error) {
+      console.error('Upload error:', error);
+      setAnalysisResult({ error: error.message });
+      setAgentInsights(prev => [{
+        type: 'error',
+        title: 'Upload Failed',
+        message: 'There was an error analyzing your document. Please try again.',
+        priority: 'high'
+      }, ...prev]);
+      toast.error('Failed to analyze document');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const startHomework = (homework) => {
     setRecentActivity(prev => [{
@@ -337,8 +414,6 @@ const MainDashboard = () => {
     </div>
   );
 
-  // Removed SubjectsTab component as we're focusing only on English topics
-
   const HomeworkTab = () => (
     <div className="space-y-6">
       {/* Pending Homework */}
@@ -377,7 +452,17 @@ const MainDashboard = () => {
                 </div>
               </div>
               
-              <p className="text-sm text-gray-700 mb-4">{homework.description}</p>
+              <div className="space-y-3">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-700">{homework.description}</p>
+                </div>
+                {homework.explanation && (
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <p className="text-xs font-medium text-blue-800 mb-1">Explanation</p>
+                    <p className="text-sm text-gray-700">{homework.explanation}</p>
+                  </div>
+                )}
+              </div>
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 text-sm text-gray-600">
@@ -444,56 +529,113 @@ const MainDashboard = () => {
         </div>
         
         <div className="max-w-md mx-auto">
-          <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-            isAnalyzing ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-          }`}>
+          <div 
+            className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+              isAnalyzing ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500'
+            }`}
+          >
             {isAnalyzing ? (
               <div className="space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <div className="relative w-12 h-12 mx-auto">
+                  <div className="absolute inset-0 border-t-2 border-blue-500 rounded-full animate-[spin_0.6s_linear_infinite]"></div>
+                  <div className="absolute inset-2 flex items-center justify-center">
+                    <Brain size={20} color="#3B82F6" />
+                  </div>
+                </div>
                 <p className="text-blue-600 font-medium">Analyzing your document...</p>
-                <p className="text-sm text-gray-600">This may take a few seconds</p>
+                <p className="text-sm text-gray-500">This may take a few moments</p>
+              </div>
+            ) : analysisResult?.error ? (
+              <div className="space-y-4 text-center">
+                <div className="w-12 h-12 mx-auto flex items-center justify-center bg-red-100 rounded-full">
+                  <AlertTriangle size={24} className="text-red-500" />
+                </div>
+                <div>
+                  <p className="text-red-600 font-medium">Analysis Failed</p>
+                  <p className="text-sm text-gray-600 mt-1">{analysisResult.error}</p>
+                  <button
+                    onClick={() => setAnalysisResult(null)}
+                    className="mt-4 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                  >
+                    Try Again
+                  </button>
+                </div>
               </div>
             ) : (
               <>
                 <input
                   type="file"
-                  onChange={handleFileUpload}
-                  className="hidden"
                   id="file-upload"
-                  accept=".pdf,.doc,.docx,.txt,.jpg,.png"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
                 />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <Upload className="mx-auto mb-4" size={40} color="#6B7280" />
-                  <p className="text-lg font-medium text-gray-700 mb-2">Drop your file here or click to browse</p>
-                  <p className="text-sm text-gray-500">Supports PDF, DOC, DOCX, TXT, images</p>
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer flex flex-col items-center"
+                >
+                  <Upload className="mb-4" size={32} color="#6B7280" />
+                  <span className="text-gray-900 font-medium">Drop your file here, or click to upload</span>
+                  <p className="text-sm text-gray-500 mt-2">Supports PDF, images, and Word documents</p>
                 </label>
               </>
             )}
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <div className="text-center p-4">
-            <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-              <Eye size={24} color="#3B82F6" />
-            </div>
-            <h3 className="font-semibold mb-2">Instant Analysis</h3>
-            <p className="text-sm text-gray-600">AI identifies strengths and weaknesses immediately</p>
+      </div>
+
+      {/* Analysis Results */}
+      {analysisResult && !isAnalyzing && (
+        <div className="space-y-6">
+          {/* Performance Radar */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold mb-4">Analysis Results</h3>
+            <ResponsiveContainer width="100%" height={400}>
+              <RadarChart data={radarData}>
+                <PolarGrid gridType="circle" />
+                <PolarAngleAxis 
+                  dataKey="subject" 
+                  tick={{ fill: '#4B5563', fontSize: 14 }}
+                />
+                <Tooltip />
+                <Radar 
+                  name="Score" 
+                  dataKey="score" 
+                  stroke="#3B82F6" 
+                  fill="#3B82F6" 
+                  fillOpacity={0.4} 
+                />
+              </RadarChart>
+            </ResponsiveContainer>
           </div>
-          <div className="text-center p-4">
-            <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-              <Target size={24} color="#10B981" />
-            </div>
-            <h3 className="font-semibold mb-2">Custom Homework</h3>
-            <p className="text-sm text-gray-600">Generate personalized practice based on your needs</p>
+
+          {/* Homework Panel */}
+          <HomeworkPanel exercises={analysisResult.homework.exercises} />
+        </div>
+      )}
+
+      {/* Features Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="text-center p-4">
+          <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+            <Eye size={24} color="#3B82F6" />
           </div>
-          <div className="text-center p-4">
-            <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-              <TrendingUp size={24} color="#8B5CF6" />
-            </div>
-            <h3 className="font-semibold mb-2">Track Progress</h3>
-            <p className="text-sm text-gray-600">Monitor improvement over time with detailed analytics</p>
+          <h3 className="font-semibold mb-2">Instant Analysis</h3>
+          <p className="text-sm text-gray-600">AI identifies strengths and weaknesses immediately</p>
+        </div>
+        <div className="text-center p-4">
+          <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+            <Target size={24} color="#10B981" />
           </div>
+          <h3 className="font-semibold mb-2">Custom Homework</h3>
+          <p className="text-sm text-gray-600">Generate personalized practice based on your needs</p>
+        </div>
+        <div className="text-center p-4">
+          <div className="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+            <TrendingUp size={24} color="#8B5CF6" />
+          </div>
+          <h3 className="font-semibold mb-2">Track Progress</h3>
+          <p className="text-sm text-gray-600">Monitor improvement over time with detailed analytics</p>
         </div>
       </div>
     </div>

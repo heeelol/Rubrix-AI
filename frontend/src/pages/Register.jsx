@@ -96,6 +96,11 @@ const handleSubmit = async (e) => {
 
         {/* Registration Form */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-xl">
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/50 text-red-200">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-200 mb-2">
