@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Upload, FileText, BarChart3, Brain, Target, BookOpen, CheckCircle, AlertTriangle, TrendingUp, User, Settings, Search, Bell, Download, Eye } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area } from 'recharts';
 import HomeworkPanel from '../components/HomeworkPanel';
@@ -10,13 +10,14 @@ const MainDashboard = () => {
   const [notifications, setNotifications] = useState(3);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [generatedExercises, setGeneratedExercises] = useState(null);
+  const answerTextareaRef = React.useRef(null);
   
   const [radarData, setRadarData] = useState([
-    { subject: 'Grammar', score: 0 },
-    { subject: 'Vocabulary', score: 0 },
-    { subject: 'Writing', score: 0 },
-    { subject: 'Spelling', score: 0 },
-    { subject: 'Punctuation', score: 0 }
+    { subject: 'Grammar', score: 0, previousScore: 0, improvement: 0 },
+    { subject: 'Vocabulary', score: 0, previousScore: 0, improvement: 0 },
+    { subject: 'Writing', score: 0, previousScore: 0, improvement: 0 },
+    { subject: 'Spelling', score: 0, previousScore: 0, improvement: 0 },
+    { subject: 'Punctuation', score: 0, previousScore: 0, improvement: 0 }
   ]);
 
   // Fetch user scores when component mounts
@@ -27,7 +28,15 @@ const MainDashboard = () => {
 
         if (response.ok) {
           const scores = await response.json();
-          setRadarData(scores);
+          // Map the scores to include required properties if they don't exist
+          const formattedScores = scores.map(score => ({
+            subject: score.subject,
+            score: score.score || 0,
+            previousScore: score.previousScore || 0,
+            improvement: score.improvement || 0
+          }));
+          console.log('Formatted scores:', formattedScores);
+          setRadarData(formattedScores);
         } else {
           const error = await response.json();
           console.error('Failed to fetch scores:', error);
@@ -109,35 +118,7 @@ const MainDashboard = () => {
     }
   ]);
 
-  // Initialize detailed subtopics for radar data
-  useEffect(() => {
-    setRadarData([
-      { subject: 'Grammar', score: 82, subtopics: {
-        'Sentence Structure': 80,
-        'Verb Tense': 85,
-        'Subject-Verb Agreement': 81
-      }},
-      { subject: 'Vocabulary', score: 78, subtopics: {
-        'Word Choice': 75,
-        'Synonyms/Antonyms': 80,
-        'Context Usage': 79
-      }},
-      { subject: 'Writing', score: 85, subtopics: {
-        'Coherence': 86,
-        'Clarity': 84,
-        'Logical Flow': 85,
-        'Creativity': 85
-      }},
-      { subject: 'Spelling', score: 88, subtopics: {
-        'Word Accuracy': 88
-      }},
-      { subject: 'Punctuation', score: 76, subtopics: {
-        'Commas': 75,
-        'Quotation Marks': 78,
-        'Full Stops': 75
-      }}
-    ]);
-  }, []);
+  // No longer needed - removed initialization useEffect as we fetch real data
 
   const progressData = [
     { week: 'W1', Grammar: 75, Writing: 70, Reading: 80, Speaking: 78, Literature: 72 },
@@ -196,19 +177,50 @@ const MainDashboard = () => {
         }
 
         console.log('Processed exercises:', exercises);
-        const newHomeworkItems = exercises.map((exercise, index) => ({
-          id: Date.now() + index,
-          subject: 'English',
-          topic: exercise.type || 'Practice Exercise',
-          difficulty: exercise.difficulty || 'Medium',
-          questions: 1,
-          estimatedTime: '5-10 min',
-          dueDate: 'Today',
-          priority: index === 0 ? 'high' : 'medium',
-          description: exercise.question || exercise.content || exercise.description || 'Practice this exercise',
-          explanation: exercise.explanation || 'Complete the exercise to improve your skills',
-          answer: exercise.answer || ''
-        }));
+
+        // Process feedback to determine priority areas
+        const feedbackPriorities = data.analysis.feedback.reduce((acc, feedback) => {
+          if (feedback.startsWith('<grammar>')) acc.grammar = 'high';
+          else if (feedback.startsWith('<vocabulary>')) acc.vocabulary = 'high';
+          else if (feedback.startsWith('<writing>')) acc.writing = 'high';
+          else if (feedback.startsWith('<spelling>')) acc.spelling = 'high';
+          else if (feedback.startsWith('<punctuation>')) acc.punctuation = 'high';
+          return acc;
+        }, {});
+
+        const newHomeworkItems = exercises.map((exercise, index) => {
+          // Determine priority based on feedback
+          const exerciseType = exercise.type?.toLowerCase() || '';
+          const isPriorityArea = Object.entries(feedbackPriorities).some(([area, priority]) => 
+            exerciseType.includes(area) && priority === 'high'
+          );
+
+          // Calculate difficulty based on scores
+          let difficulty = 'Medium';
+          if (data.analysis.scores) {
+            const relevantScore = data.analysis.scores[exercise.type] || 0;
+            if (relevantScore < 1.5) difficulty = 'Hard';
+            else if (relevantScore > 3.5) difficulty = 'Easy';
+          }
+
+          return {
+            id: Date.now() + index,
+            subject: 'English',
+            topic: exercise.type || 'Practice Exercise',
+            difficulty: exercise.difficulty || difficulty,
+            questions: 1,
+            estimatedTime: '5-10 min',
+            dueDate: 'Today',
+            priority: isPriorityArea ? 'high' : 'medium',
+            description: exercise.question || exercise.content || exercise.description || 'Practice this exercise',
+            explanation: exercise.explanation || 'Complete the exercise to improve your skills',
+            answer: exercise.answer || '',
+            // Add context from the feedback
+            context: data.analysis.feedback
+              .filter(f => !f.startsWith('<') && f !== '')
+              .find(f => f.toLowerCase().includes(exercise.type?.toLowerCase() || '')) || ''
+          };
+        });
 
         setHomeworkQueue(prevQueue => [...newHomeworkItems, ...prevQueue]);
         
@@ -258,7 +270,32 @@ const MainDashboard = () => {
     }
   };
 
+  const [activeHomework, setActiveHomework] = useState(null);
+  const [studentAnswer, setStudentAnswer] = useState('');
+  const cursorPositionRef = useRef(0);
+
+  const handleAnswerChange = useCallback((e) => {
+    cursorPositionRef.current = e.target.selectionStart;
+    setStudentAnswer(e.target.value);
+  }, []);
+
+  useEffect(() => {
+    if (answerTextareaRef.current) {
+      answerTextareaRef.current.selectionStart = cursorPositionRef.current;
+      answerTextareaRef.current.selectionEnd = cursorPositionRef.current;
+    }
+  }, [studentAnswer]);
+
   const startHomework = (homework) => {
+    setActiveHomework(homework);
+    setStudentAnswer('');
+    // Focus the textarea after state updates
+    setTimeout(() => {
+      if (answerTextareaRef.current) {
+        answerTextareaRef.current.focus();
+      }
+    }, 0);
+
     setRecentActivity(prev => [{
       time: 'Just now',
       action: `Started ${homework.subject} homework`,
@@ -267,10 +304,17 @@ const MainDashboard = () => {
     }, ...prev]);
   };
 
-  const completeHomework = (homework) => {
-    const score = Math.floor(Math.random() * 30) + 70;
+  const submitHomework = (homework) => {
+    // Calculate score based on answer similarity (simplified for example)
+    const expectedAnswer = homework.answer.toLowerCase();
+    const givenAnswer = studentAnswer.toLowerCase();
+    const score = expectedAnswer === givenAnswer ? 100 : 
+                 givenAnswer.includes(expectedAnswer) || expectedAnswer.includes(givenAnswer) ? 80 : 
+                 70;
     
     setHomeworkQueue(prev => prev.filter(hw => hw.id !== homework.id));
+    setActiveHomework(null);
+    setStudentAnswer('');
     setRecentActivity(prev => [{
       time: 'Just now',
       action: `Completed ${homework.subject} homework`,
@@ -305,15 +349,28 @@ const MainDashboard = () => {
                 tick={{ fill: '#4B5563', fontSize: 14 }}
                 axisLine={{ stroke: '#E5E7EB' }}
               />
-              <Tooltip />
+              <Tooltip content={({ payload }) => {
+                if (payload && payload.length > 0) {
+                  const data = payload[0].payload;
+                  return (
+                    <div className="bg-white p-3 shadow-lg rounded-lg border">
+                      <p className="font-medium">{data.subject}</p>
+                      <p className="text-sm text-gray-600">{data.score}%</p>
+                    </div>
+                  );
+                }
+                return null;
+              }} />
+
               <Radar 
                 name="Proficiency" 
                 dataKey="score" 
                 stroke="#3B82F6" 
                 fill="#3B82F6" 
                 fillOpacity={0.4} 
-                strokeWidth={2} 
+                strokeWidth={2}
               />
+              <Legend />
             </RadarChart>
           </ResponsiveContainer>
         </div>
@@ -418,7 +475,7 @@ const MainDashboard = () => {
         
         <div className="space-y-4">
           {homeworkQueue.map(homework => (
-            <div key={homework.id} className={`border rounded-xl p-5 transition-all hover:shadow-md ${
+              <div key={homework.id} className={`border rounded-xl p-5 transition-all hover:shadow-md ${
               homework.priority === 'high' ? 'border-red-200 bg-red-50' :
               homework.priority === 'medium' ? 'border-yellow-200 bg-yellow-50' :
               'border-gray-200'
@@ -427,6 +484,11 @@ const MainDashboard = () => {
                 <div>
                   <h3 className="font-semibold text-lg">{homework.subject}</h3>
                   <p className="text-gray-600">{homework.topic}</p>
+                  {homework.priority === 'high' && (
+                    <span className="inline-flex items-center mt-1 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                      Priority Focus Area
+                    </span>
+                  )}
                 </div>
                 <div className="text-right">
                   <span className={`text-xs px-2 py-1 rounded-full ${
@@ -438,38 +500,80 @@ const MainDashboard = () => {
                   </span>
                   <p className="text-sm text-gray-500 mt-1">Due: {homework.dueDate}</p>
                 </div>
-              </div>
-              
-              <div className="space-y-3">
+              </div>              <div className="space-y-3">
                 <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-sm text-gray-700">{homework.description}</p>
                 </div>
                 {homework.explanation && (
                   <div className="bg-blue-50 rounded-lg p-4">
-                    <p className="text-xs font-medium text-blue-800 mb-1">Explanation</p>
+                    <p className="text-xs font-medium text-blue-800 mb-1">Hints</p>
                     <p className="text-sm text-gray-700">{homework.explanation}</p>
+                  </div>
+                )}
+                {homework.context && (
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <p className="text-xs font-medium text-purple-800 mb-1">Why This Exercise?</p>
+                    <p className="text-sm text-gray-700">{homework.context}</p>
+                  </div>
+                )}
+                
+                {activeHomework?.id === homework.id && (
+                  <div className="mt-4 bg-white rounded-lg border-2 border-blue-200 p-4">
+                    <p className="text-sm font-medium text-blue-800 mb-2">Your Answer:</p>
+                    <textarea
+                      key={`answer-${homework.id}`}
+                      ref={answerTextareaRef}
+                      value={studentAnswer}
+                      onChange={handleAnswerChange}
+                      autoFocus
+                      className="w-full h-32 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Type your answer here..."
+                    />
                   </div>
                 )}
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center space-x-4 text-sm text-gray-600">
                   <span>📝 {homework.questions} questions</span>
                   <span>⏱️ {homework.estimatedTime}</span>
                 </div>
                 <div className="flex space-x-2">
-                  <button 
-                    onClick={() => startHomework(homework)}
-                    className="px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 font-medium"
-                  >
-                    Preview
-                  </button>
-                  <button 
-                    onClick={() => completeHomework(homework)}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium"
-                  >
-                    Start Assignment
-                  </button>
+                  {activeHomework?.id === homework.id ? (
+                    <>
+                      <button 
+                        onClick={() => {
+                          setActiveHomework(null);
+                          setStudentAnswer('');
+                        }}
+                        className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={() => submitHomework(homework)}
+                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
+                        disabled={!studentAnswer.trim()}
+                      >
+                        Submit Answer
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={() => startHomework(homework)}
+                        className="px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 font-medium"
+                      >
+                        Preview
+                      </button>
+                      <button 
+                        onClick={() => startHomework(homework)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium"
+                      >
+                        Start Assignment
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -578,23 +682,54 @@ const MainDashboard = () => {
           {/* Performance Radar */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="text-lg font-semibold mb-4">Analysis Results</h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <RadarChart data={radarData}>
-                <PolarGrid gridType="circle" />
-                <PolarAngleAxis 
-                  dataKey="subject" 
-                  tick={{ fill: '#4B5563', fontSize: 14 }}
-                />
-                <Tooltip />
-                <Radar 
-                  name="Score" 
-                  dataKey="score" 
-                  stroke="#3B82F6" 
-                  fill="#3B82F6" 
-                  fillOpacity={0.4} 
-                />
-              </RadarChart>
-            </ResponsiveContainer>
+            <div className="space-y-6">
+              <ResponsiveContainer width="100%" height={400}>
+                <RadarChart data={radarData}>
+                  <PolarGrid gridType="circle" />
+                  <PolarAngleAxis 
+                    dataKey="subject" 
+                    tick={{ fill: '#4B5563', fontSize: 14 }}
+                  />
+                  <Tooltip />
+                  <Radar 
+                    name="Score" 
+                    dataKey="score" 
+                    stroke="#3B82F6" 
+                    fill="#3B82F6" 
+                    fillOpacity={0.4} 
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+
+              {/* Feedback Section */}
+              {analysisResult.analysis?.feedback && (
+                <div className="mt-6 space-y-4">
+                  <h4 className="text-lg font-semibold">Detailed Feedback</h4>
+                  <div className="grid gap-4">
+                    {analysisResult.analysis.feedback.map((feedback, index) => {
+                      // Skip empty strings and XML-like tags
+                      if (!feedback || feedback.startsWith('<') || feedback === '') return null;
+                      
+                      return (
+                        <div key={index} className="p-4 bg-gray-50 rounded-lg">
+                          <p className="text-gray-700">{feedback}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Original Text */}
+              {analysisResult.analysis?.text && (
+                <div className="mt-6">
+                  <h4 className="text-lg font-semibold mb-3">Analyzed Text</h4>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <pre className="whitespace-pre-wrap text-sm text-gray-700">{analysisResult.analysis.text}</pre>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Homework Panel */}
