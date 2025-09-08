@@ -1,6 +1,6 @@
-# EduAgent AI - Personalized Learning Assistant
+# Rubrix AI - Personalized Learning Assistant
 
-EduAgent AI is an intelligent learning platform that provides personalized education through real-time analysis and adaptive exercises. Currently focused on English language learning, with plans to expand to other subjects.
+Rubrix AI is an intelligent learning platform that provides personalized education through real-time analysis and adaptive exercises. Currently focused on English language learning, with plans to expand to other subjects.
 
 ## 🌟 Features
 
