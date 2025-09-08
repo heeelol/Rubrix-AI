@@ -330,6 +330,22 @@ const MainDashboard = () => {
         score: Math.min(100, prev[homework.subject].score + (score > 80 ? 3 : score > 70 ? 1 : 0))
       }
     }));
+
+    // Update radar chart data
+    setRadarData(prev => prev.map(item => {
+      // Determine which skill to improve based on homework topic
+      const isRelevantSkill = homework.topic.toLowerCase().includes(item.subject.toLowerCase());
+      if (isRelevantSkill) {
+        const improvement = score >= 80 ? 5 : 2; // More points for better performance
+        return {
+          ...item,
+          previousScore: item.score,
+          score: Math.min(100, item.score + improvement),
+          improvement: improvement
+        };
+      }
+      return item;
+    }));
   };
 
   const OverviewTab = () => (
@@ -355,7 +371,13 @@ const MainDashboard = () => {
                   return (
                     <div className="bg-white p-3 shadow-lg rounded-lg border">
                       <p className="font-medium">{data.subject}</p>
-                      <p className="text-sm text-gray-600">{data.score}%</p>
+                      <p className="text-sm text-gray-600">Current: {data.score}%</p>
+                      {data.previousScore > 0 && (
+                        <p className="text-xs text-green-600 mt-1">
+                          Previous: {data.previousScore}%
+                          {data.improvement > 0 && ` (+${data.improvement})`}
+                        </p>
+                      )}
                     </div>
                   );
                 }
@@ -363,7 +385,16 @@ const MainDashboard = () => {
               }} />
 
               <Radar 
-                name="Proficiency" 
+                name="Previous Score" 
+                dataKey="previousScore" 
+                stroke="#94A3B8" 
+                fill="#94A3B8" 
+                fillOpacity={0.2} 
+                strokeWidth={1} 
+                strokeDasharray="4 4"
+              />
+              <Radar 
+                name="Current Score" 
                 dataKey="score" 
                 stroke="#3B82F6" 
                 fill="#3B82F6" 
@@ -375,21 +406,7 @@ const MainDashboard = () => {
           </ResponsiveContainer>
         </div>
         
-        {/* Progress Trend */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h3 className="text-lg font-semibold mb-4">Weekly Progress</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={progressData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="week" />
-              <YAxis />
-              <Tooltip />
-              <Area type="monotone" dataKey="Mathematics" stackId="1" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-              <Area type="monotone" dataKey="Physics" stackId="1" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
-              <Area type="monotone" dataKey="Chemistry" stackId="1" stroke="#ffc658" fill="#ffc658" fillOpacity={0.6} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+     
       </div>
       
       {/* Right Sidebar */}
@@ -773,7 +790,7 @@ const MainDashboard = () => {
             <div className="flex items-center">
               <Brain className="mr-3" size={32} color="#3B82F6" />
               <div>
-                <h1 className="text-xl font-bold text-gray-900">EduAgent AI</h1>
+                <h1 className="text-xl font-bold text-gray-900">Rubrix AI</h1>
                 <p className="text-sm text-gray-600">Personalized Learning Assistant</p>
               </div>
             </div>
