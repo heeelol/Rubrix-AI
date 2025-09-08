@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, BarChart3, Brain, Target, BookOpen, CheckCircle, AlertTriangle, TrendingUp, User, Settings, LogOut, Bell, Search, Download, Eye } from 'lucide-react';
+import { Upload, FileText, BarChart3, Brain, Target, BookOpen, CheckCircle, AlertTriangle, TrendingUp, User, Settings, Search, Bell, Download, Eye } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area } from 'recharts';
 import HomeworkPanel from '../components/HomeworkPanel';
 import { toast } from 'react-hot-toast';
@@ -171,21 +171,12 @@ const MainDashboard = () => {
       // Update radar chart data with the scores
       if (data.analysis && data.analysis.scores) {
         console.log('Processing scores:', data.analysis.scores);
-        // Convert scores from 1-5 scale to 0-100 scale
-        const normalizeScore = (score) => {
-          if (typeof score === 'number') {
-            // Convert 1-5 scale to 0-100 scale
-            return Math.round((score / 5) * 100);
-          }
-          return 0;
-        };
-
         const scores = [
-          { subject: 'Grammar', score: normalizeScore(data.analysis.scores.Grammar) },
-          { subject: 'Vocabulary', score: normalizeScore(data.analysis.scores.Vocabulary) },
-          { subject: 'Writing', score: normalizeScore(data.analysis.scores.Writing) },
-          { subject: 'Spelling', score: normalizeScore(data.analysis.scores.Spelling) },
-          { subject: 'Punctuation', score: normalizeScore(data.analysis.scores.Punctuation) }
+          { subject: 'Grammar', score: Math.round((parseFloat(data.analysis.scores.Grammar) || 0) * 20) },
+          { subject: 'Vocabulary', score: Math.round((parseFloat(data.analysis.scores.Vocabulary) || 0) * 20) },
+          { subject: 'Writing', score: Math.round((parseFloat(data.analysis.scores.Writing) || 0) * 20) },
+          { subject: 'Spelling', score: Math.round((parseFloat(data.analysis.scores.Spelling) || 0) * 20) },
+          { subject: 'Punctuation', score: Math.round((parseFloat(data.analysis.scores.Punctuation) || 0) * 20) }
         ];
         console.log('Normalized scores for radar chart:', scores);
         setRadarData(scores);
@@ -304,10 +295,7 @@ const MainDashboard = () => {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold">Performance Overview</h2>
-            <div className="flex space-x-2">
-              <button className="text-sm px-3 py-1 bg-blue-100 text-blue-700 rounded-lg">This Month</button>
-              <button className="text-sm px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-lg">All Time</button>
-            </div>
+      
           </div>
           <ResponsiveContainer width="100%" height={400}>
             <RadarChart data={radarData}>
